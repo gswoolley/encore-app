@@ -1,19 +1,24 @@
+// Load environment variables (DB, session secret, etc.)
 require("dotenv").config();
+
 const express = require("express");
 const session = require("express-session");
 const bcrypt = require("bcryptjs");
 const path = require("path");
-const pool = require("./db");
+const db = require("./db"); // Knex instance configured for Postgres
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Configure EJS views
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
+// Body parsing and static assets
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
+// Session middleware for auth state
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "fallback-secret-key",
@@ -22,7 +27,7 @@ app.use(
   })
 );
 
-// Surface the logged-in user and flash messages to templates
+// Expose user + flash messages to all templates
 app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
   res.locals.flashMessage = req.session.flashMessage || null;
@@ -30,6 +35,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// Simple auth gate: allow public routes, otherwise require session
 const publicPaths = ["/", "/login", "/register"];
 app.use((req, res, next) => {
   if (publicPaths.includes(req.path)) {
@@ -41,6 +47,7 @@ app.use((req, res, next) => {
   res.redirect("/login");
 });
 
+// Helper to render errors and log server issues
 const renderError = (res, message, error = null, status = 500) => {
   if (error) {
     console.error(message, error);
@@ -50,10 +57,12 @@ const renderError = (res, message, error = null, status = 500) => {
   res.status(status).render("error", { message, error });
 };
 
+// Public landing page (marketing/cta)
 app.get("/", (req, res) => {
   res.render("index");
 });
 
+// Registration form
 app.get("/register", (req, res) => {
   if (req.session.user) {
     return res.redirect("/dashboard");
@@ -61,6 +70,7 @@ app.get("/register", (req, res) => {
   res.render("register", { error_message: "" });
 });
 
+// Handle registration: validate, check duplicate email, hash password, create user, log in
 app.post("/register", async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
 
@@ -77,26 +87,29 @@ app.post("/register", async (req, res) => {
   }
 
   try {
-    const existing = await pool.query(
-      "SELECT userid FROM security WHERE email = $1",
-      [email.toLowerCase()]
-    );
-    if (existing.rowCount > 0) {
+    const existing = await db("security")
+      .whereRaw("LOWER(email) = ?", [email.toLowerCase()])
+      .first();
+    if (existing) {
       return res.render("register", {
         error_message: "That email already has an account.",
       });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await pool.query(
-      "INSERT INTO security (name, email, password) VALUES ($1, $2, $3) RETURNING userid, name, email",
-      [name, email.toLowerCase(), hashedPassword]
-    );
+    const result = await db("security")
+      .insert({
+        name,
+        email: email.toLowerCase(),
+        password: hashedPassword,
+      })
+      .returning(["userid", "name", "email"]);
 
+    const userRow = result[0];
     req.session.user = {
-      id: result.rows[0].userid,
-      name: result.rows[0].name,
-      email: result.rows[0].email,
+      id: userRow.userid,
+      name: userRow.name,
+      email: userRow.email,
     };
     res.redirect("/dashboard");
   } catch (error) {
@@ -104,6 +117,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
+// Login form
 app.get("/login", (req, res) => {
   if (req.session.user) {
     return res.redirect("/dashboard");
@@ -111,20 +125,20 @@ app.get("/login", (req, res) => {
   res.render("login", { error_message: "" });
 });
 
+// Handle login: fetch user, compare password hash, store session
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
-    const result = await pool.query(
-      "SELECT userid, name, email, password FROM security WHERE email = $1",
-      [email.toLowerCase()]
-    );
-    if (result.rowCount === 0) {
+    const user = await db("security")
+      .whereRaw("LOWER(email) = ?", [email.toLowerCase()])
+      .first();
+
+    if (!user) {
       return res.render("login", {
         error_message: "No account found with that email.",
       });
     }
 
-    const user = result.rows[0];
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
@@ -144,39 +158,49 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// Logout destroys session and redirects home
 app.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/");
   });
 });
 
+// Authenticated dashboard summary
 app.get("/dashboard", async (req, res) => {
   try {
-    const profileResult = await pool.query(
-      "SELECT genre, bio, availability, location FROM users WHERE userid = $1",
-      [req.session.user.id]
-    );
+    const profile = await db("users")
+      .select("genre", "bio", "availability", "location")
+      .where("userid", req.session.user.id)
+      .first();
+
     res.render("dashboard", {
       user: req.session.user,
-      profile: profileResult.rows[0] || null,
+      profile: profile || null,
     });
   } catch (error) {
     renderError(res, "Unable to load the dashboard right now.", error);
   }
 });
 
+// View profile; redirect to add if none exists
 app.get("/profile", async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT s.userid, s.name, s.email, u.performerid, u.genre, u.bio, u.availability, u.location
-       FROM security s
-       LEFT JOIN users u ON u.userid = s.userid
-       WHERE s.userid = $1`,
-      [req.session.user.id]
-    );
+    const profile = await db("security as s")
+      .leftJoin("users as u", "u.userid", "s.userid")
+      .select(
+        "s.userid",
+        "s.name",
+        "s.email",
+        "u.performerid",
+        "u.genre",
+        "u.bio",
+        "u.availability",
+        "u.location"
+      )
+      .where("s.userid", req.session.user.id)
+      .first();
 
-    const profile = result.rows[0];
-    if (!profile.performerid) {
+    if (!profile || !profile.performerid) {
       return res.redirect("/profile/add");
     }
 
@@ -186,14 +210,15 @@ app.get("/profile", async (req, res) => {
   }
 });
 
+// Start new profile form (guard if one already exists)
 app.get("/profile/add", async (req, res) => {
   try {
-    const existing = await pool.query(
-      "SELECT performerid FROM users WHERE userid = $1",
-      [req.session.user.id]
-    );
+    const existing = await db("users")
+      .select("performerid")
+      .where("userid", req.session.user.id)
+      .first();
 
-    if (existing.rowCount > 0) {
+    if (existing) {
       return res.redirect("/profile/edit");
     }
 
@@ -203,6 +228,7 @@ app.get("/profile/add", async (req, res) => {
   }
 });
 
+// Create profile record
 app.post("/profile/add", async (req, res) => {
   const { genre, bio, availability, location } = req.body;
 
@@ -213,10 +239,13 @@ app.post("/profile/add", async (req, res) => {
   }
 
   try {
-    await pool.query(
-      "INSERT INTO users (userid, genre, bio, availability, location) VALUES ($1, $2, $3, $4, $5)",
-      [req.session.user.id, genre, bio, availability || "N", location]
-    );
+    await db("users").insert({
+      userid: req.session.user.id,
+      genre,
+      bio,
+      availability: availability || "N",
+      location,
+    });
     req.session.flashMessage = "Profile created successfully.";
     res.redirect("/profile");
   } catch (error) {
@@ -224,17 +253,19 @@ app.post("/profile/add", async (req, res) => {
   }
 });
 
+// Edit profile form
 app.get("/profile/edit", async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT genre, bio, availability, location FROM users WHERE userid = $1",
-      [req.session.user.id]
-    );
-    if (result.rowCount === 0) {
+    const profile = await db("users")
+      .select("genre", "bio", "availability", "location")
+      .where("userid", req.session.user.id)
+      .first();
+
+    if (!profile) {
       return res.redirect("/profile/add");
     }
     res.render("editProfile", {
-      profile: result.rows[0],
+      profile,
       error_message: "",
     });
   } catch (error) {
@@ -242,6 +273,7 @@ app.get("/profile/edit", async (req, res) => {
   }
 });
 
+// Apply profile updates
 app.post("/profile/edit", async (req, res) => {
   const { genre, bio, availability, location } = req.body;
 
@@ -253,10 +285,14 @@ app.post("/profile/edit", async (req, res) => {
   }
 
   try {
-    await pool.query(
-      "UPDATE users SET genre = $1, bio = $2, availability = $3, location = $4 WHERE userid = $5",
-      [genre, bio, availability || "N", location, req.session.user.id]
-    );
+    await db("users")
+      .where("userid", req.session.user.id)
+      .update({
+        genre,
+        bio,
+        availability: availability || "N",
+        location,
+      });
     req.session.flashMessage = "Profile updated.";
     res.redirect("/profile");
   } catch (error) {
@@ -264,11 +300,10 @@ app.post("/profile/edit", async (req, res) => {
   }
 });
 
+// Delete profile record
 app.post("/profile/delete", async (req, res) => {
   try {
-    await pool.query("DELETE FROM users WHERE userid = $1", [
-      req.session.user.id,
-    ]);
+    await db("users").where("userid", req.session.user.id).del();
     req.session.flashMessage = "Profile deleted.";
     res.redirect("/profile/add");
   } catch (error) {
@@ -276,63 +311,60 @@ app.post("/profile/delete", async (req, res) => {
   }
 });
 
+// Directory listing with optional search filter (name/genre/location)
 app.get("/directory", async (req, res) => {
   const { search = "" } = req.query;
-  const filters = [];
-  const values = [];
-
-  if (search) {
-    values.push(`%${search.toLowerCase()}%`);
-    filters.push(
-      `(LOWER(s.name) LIKE $1 OR LOWER(u.genre) LIKE $1 OR LOWER(u.location) LIKE $1)`
-    );
-  }
-
-  const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
-  const query = `
-    SELECT s.name, s.email, u.genre, u.bio, u.availability, u.location
-    FROM users u
-    JOIN security s ON s.userid = u.userid
-    ${whereClause}
-    ORDER BY LOWER(s.name) ASC
-  `;
+  const term = search.trim().toLowerCase();
 
   try {
-    const performers = (await pool.query(query, values)).rows;
+    const performers = await db("users as u")
+      .join("security as s", "s.userid", "u.userid")
+      .select("s.name", "s.email", "u.genre", "u.bio", "u.availability", "u.location")
+      .modify((query) => {
+        if (term) {
+          query.whereRaw(
+            "(LOWER(s.name) LIKE ? OR LOWER(u.genre) LIKE ? OR LOWER(u.location) LIKE ?)",
+            [`%${term}%`, `%${term}%`, `%${term}%`]
+          );
+        }
+      })
+      .orderByRaw("LOWER(s.name) ASC");
+
     res.render("directory", { performers, search });
   } catch (error) {
     renderError(res, "Unable to load the directory.", error);
   }
 });
 
+// Availability form (redirect to create profile if missing)
 app.get("/availability", async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT availability FROM users WHERE userid = $1",
-      [req.session.user.id]
-    );
+    const profile = await db("users")
+      .select("availability")
+      .where("userid", req.session.user.id)
+      .first();
 
-    if (result.rowCount === 0) {
+    if (!profile) {
       return res.redirect("/profile/add");
     }
 
     res.render("availability", {
-      availability: result.rows[0].availability || "N",
+      availability: profile.availability || "N",
     });
   } catch (error) {
     renderError(res, "Unable to load availability right now.", error);
   }
 });
 
+// Save availability toggle
 app.post("/availability", async (req, res) => {
   const { availability } = req.body;
   try {
-    const update = await pool.query(
-      "UPDATE users SET availability = $1 WHERE userid = $2",
-      [availability || "N", req.session.user.id]
-    );
+    const updated = await db("users")
+      .where("userid", req.session.user.id)
+      .update({ availability: availability || "N" });
 
-    if (update.rowCount === 0) {
+    if (updated === 0) {
       return res.redirect("/profile/add");
     }
 
@@ -343,19 +375,23 @@ app.post("/availability", async (req, res) => {
   }
 });
 
+// Generic success page (optional)
 app.get("/success", (req, res) => {
   const message = req.query.message || "Action completed successfully.";
   res.render("success", { message });
 });
 
+// 404 handler
 app.use((req, res) => {
   renderError(res, "Page not found.", null, 404);
 });
 
+// Error handler for unexpected exceptions
 app.use((err, req, res, next) => {
   renderError(res, "Something went wrong.", err);
 });
 
+// Start the server
 app.listen(port, () => {
   console.log(`Encore app listening on port ${port}`);
 });

@@ -1,6 +1,6 @@
 # Encore App
 
-A simple Express + EJS app for performers with auth, profiles, availability, and a searchable directory backed by PostgreSQL.
+A simple Express + EJS app for performers with auth, profiles, availability, and a searchable directory backed by PostgreSQL. Uses Knex as the query builder.
 
 ## Prerequisites
 - Node.js 18+
@@ -14,16 +14,35 @@ npm install
 
 2) Create `.env` in the project root:
 ```env
-DB_HOST=awseb-e-scmsa2yquz-stack-awsebrdsdatabase-8jcysuidobdo.c4raiiwyiy3q.us-east-1.rds.amazonaws.com
+DB_HOST=your-db-host
 DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=byubluebanana
-DB_NAME=ebdb
-SESSION_SECRET=19384yjhfesas4||super_secret_session_key
-PORT=3016
+DB_USER=your-db-user
+DB_PASSWORD=your-db-password
+DB_NAME=your-db-name
+SESSION_SECRET=change_me
+PORT=3000
 ```
 
-3) Start the server:
+3) Create tables (run in psql or your DB tool):
+```sql
+CREATE TABLE IF NOT EXISTS security (
+  userid SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(150) UNIQUE NOT NULL,
+  password VARCHAR(200) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  performerid SERIAL PRIMARY KEY,
+  userid INTEGER NOT NULL REFERENCES security(userid) ON DELETE CASCADE,
+  genre VARCHAR(100),
+  bio TEXT,
+  availability VARCHAR(1),
+  location VARCHAR(100)
+);
+```
+
+4) Start the server:
 ```bash
 npm start
 ```
@@ -38,4 +57,4 @@ App runs on `http://localhost:3000` (or `PORT` you set).
 ## Notes
 - Passwords are hashed with bcrypt.
 - Sessions use the `SESSION_SECRET`; change it for production.
-- If connecting to a cloud Postgres that requires SSL, adjust `db.js` accordingly.***
+- If connecting to a cloud Postgres that requires SSL, adjust `db.js` accordingly.
