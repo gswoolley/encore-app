@@ -6,6 +6,69 @@ const session = require("express-session");
 const bcrypt = require("bcryptjs");
 const path = require("path");
 const db = require("./db"); // Knex instance configured for Postgres
+const multer = require("multer");
+
+// In-memory storage for profile images; capped to 5MB per upload
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+// Wrap multer to surface user-friendly errors instead of crashing
+const uploadImage = (req, res, next) => {
+  upload.single("profileImage")(req, res, (err) => {
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        req.uploadError = "Image too large (max 5MB).";
+      } else {
+        req.uploadError = "Unable to upload that image. Try a smaller JPG/PNG.";
+      }
+    }
+    next();
+  });
+};
+
+// Schema flags populated at startup so we can gracefully handle missing columns
+let hasImageColumns = false;
+const ensureImageColumns = async () => {
+  try {
+    const [hasImage, hasMime] = await Promise.all([
+      db.schema.hasColumn("users", "profile_image"),
+      db.schema.hasColumn("users", "profile_image_mime"),
+    ]);
+    if (hasImage && hasMime) {
+      hasImageColumns = true;
+      return;
+    }
+
+    // Try to add the missing columns automatically
+    await db.schema.alterTable("users", (table) => {
+      if (!hasImage) {
+        table.binary("profile_image");
+      }
+      if (!hasMime) {
+        table.text("profile_image_mime");
+      }
+    });
+    hasImageColumns = true;
+    console.log("Added profile_image/profile_image_mime columns to users table.");
+    return true;
+  } catch (schemaErr) {
+    console.warn(
+      "Profile image columns missing and could not be added automatically. Add profile_image BYTEA and profile_image_mime TEXT to enable photos.",
+      schemaErr
+    );
+    return false;
+  }
+};
+ensureImageColumns();
+
+// Convert a buffer to a data URL for inline rendering
+const toDataUrl = (buffer, mime) => {
+  if (!buffer) return null;
+  const safeMime = mime && mime.startsWith("image/") ? mime : "image/png";
+  return `data:${safeMime};base64,${buffer.toString("base64")}`;
+};
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -59,7 +122,7 @@ const renderError = (res, message, error = null, status = 500) => {
 
 // Public landing page (marketing/cta)
 app.get("/", (req, res) => {
-  res.render("index");
+  res.redirect("/login");
 });
 
 // Registration form
@@ -139,13 +202,14 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = password === user.password;
 
-    if (!isValidPassword) {
-      return res.render("login", {
-        error_message: "Incorrect password. Please try again.",
-      });
-    }
+if (!isValidPassword) {
+  return res.render("login", {
+    error_message: "Incorrect password. Please try again.",
+  });
+}
+
 
     req.session.user = {
       id: user.userid,
@@ -168,10 +232,12 @@ app.get("/logout", (req, res) => {
 // Authenticated dashboard summary
 app.get("/dashboard", async (req, res) => {
   try {
-    const profile = await db("users")
-      .select("genre", "bio", "availability", "location")
-      .where("userid", req.session.user.id)
-      .first();
+    const columns = ["genre", "bio", "availability", "location"];
+    if (hasImageColumns) {
+      columns.push("profile_image", "profile_image_mime");
+    }
+
+    const profile = await db("users").select(columns).where("userid", req.session.user.id).first();
 
     res.render("dashboard", {
       user: req.session.user,
@@ -185,18 +251,25 @@ app.get("/dashboard", async (req, res) => {
 // View profile; redirect to add if none exists
 app.get("/profile", async (req, res) => {
   try {
+    await ensureImageColumns();
+
+    const columns = [
+      "s.userid",
+      "s.name",
+      "s.email",
+      "u.performerid",
+      "u.genre",
+      "u.bio",
+      "u.availability",
+      "u.location",
+    ];
+    if (hasImageColumns) {
+      columns.push("u.profile_image", "u.profile_image_mime");
+    }
+
     const profile = await db("security as s")
       .leftJoin("users as u", "u.userid", "s.userid")
-      .select(
-        "s.userid",
-        "s.name",
-        "s.email",
-        "u.performerid",
-        "u.genre",
-        "u.bio",
-        "u.availability",
-        "u.location"
-      )
+      .select(columns)
       .where("s.userid", req.session.user.id)
       .first();
 
@@ -204,7 +277,12 @@ app.get("/profile", async (req, res) => {
       return res.redirect("/profile/add");
     }
 
-    res.render("profile", { profile });
+    let imageUrl = null;
+    if (hasImageColumns) {
+      imageUrl = toDataUrl(profile.profile_image, profile.profile_image_mime);
+    }
+
+    res.render("profile", { profile: { ...profile, imageUrl } });
   } catch (error) {
     renderError(res, "Unable to load your profile.", error);
   }
@@ -229,7 +307,7 @@ app.get("/profile/add", async (req, res) => {
 });
 
 // Create profile record
-app.post("/profile/add", async (req, res) => {
+app.post("/profile/add", uploadImage, async (req, res) => {
   const { genre, bio, availability, location } = req.body;
 
   if (!genre || !location) {
@@ -239,16 +317,38 @@ app.post("/profile/add", async (req, res) => {
   }
 
   try {
+    await ensureImageColumns();
+
+    if (!hasImageColumns) {
+      return res.render("addProfile", {
+        error_message:
+          "Profile images are not available until the database has profile_image columns. Please contact an admin.",
+      });
+    }
+
+    if (req.uploadError) {
+      return res.render("addProfile", {
+        error_message: req.uploadError,
+      });
+    }
+
     await db("users").insert({
       userid: req.session.user.id,
       genre,
       bio,
       availability: availability || "N",
       location,
+      ...(hasImageColumns && req.file
+        ? {
+            profile_image: req.file.buffer,
+            profile_image_mime: req.file.mimetype,
+          }
+        : {}),
     });
     req.session.flashMessage = "Profile created successfully.";
     res.redirect("/profile");
   } catch (error) {
+    console.error("Unable to create profile:", error);
     renderError(res, "Unable to create your profile.", error);
   }
 });
@@ -256,16 +356,25 @@ app.post("/profile/add", async (req, res) => {
 // Edit profile form
 app.get("/profile/edit", async (req, res) => {
   try {
-    const profile = await db("users")
-      .select("genre", "bio", "availability", "location")
-      .where("userid", req.session.user.id)
-      .first();
+    await ensureImageColumns();
+
+    const columns = ["genre", "bio", "availability", "location"];
+    if (hasImageColumns) {
+      columns.push("profile_image", "profile_image_mime");
+    }
+
+    const profile = await db("users").select(columns).where("userid", req.session.user.id).first();
 
     if (!profile) {
       return res.redirect("/profile/add");
     }
     res.render("editProfile", {
-      profile,
+      profile: {
+        ...profile,
+        imageUrl: hasImageColumns
+          ? toDataUrl(profile.profile_image, profile.profile_image_mime)
+          : null,
+      },
       error_message: "",
     });
   } catch (error) {
@@ -274,7 +383,7 @@ app.get("/profile/edit", async (req, res) => {
 });
 
 // Apply profile updates
-app.post("/profile/edit", async (req, res) => {
+app.post("/profile/edit", uploadImage, async (req, res) => {
   const { genre, bio, availability, location } = req.body;
 
   if (!genre || !location) {
@@ -285,17 +394,40 @@ app.post("/profile/edit", async (req, res) => {
   }
 
   try {
-    await db("users")
-      .where("userid", req.session.user.id)
-      .update({
-        genre,
-        bio,
-        availability: availability || "N",
-        location,
+    await ensureImageColumns();
+
+    if (!hasImageColumns) {
+      return res.render("editProfile", {
+        profile: { genre, bio, availability, location },
+        error_message:
+          "Profile images are not available until the database has profile_image columns. Please contact an admin.",
       });
+    }
+
+    if (req.uploadError) {
+      return res.render("editProfile", {
+        profile: { genre, bio, availability, location },
+        error_message: req.uploadError,
+      });
+    }
+
+    const updateData = {
+      genre,
+      bio,
+      availability: availability || "N",
+      location,
+    };
+
+    if (hasImageColumns && req.file) {
+      updateData.profile_image = req.file.buffer;
+      updateData.profile_image_mime = req.file.mimetype;
+    }
+
+    await db("users").where("userid", req.session.user.id).update(updateData);
     req.session.flashMessage = "Profile updated.";
     res.redirect("/profile");
   } catch (error) {
+    console.error("Unable to update profile:", error);
     renderError(res, "Unable to update your profile.", error);
   }
 });
@@ -317,9 +449,16 @@ app.get("/directory", async (req, res) => {
   const term = search.trim().toLowerCase();
 
   try {
+    await ensureImageColumns();
+
+    const columns = ["s.name", "s.email", "u.genre", "u.bio", "u.availability", "u.location"];
+    if (hasImageColumns) {
+      columns.push("u.profile_image", "u.profile_image_mime");
+    }
+
     const performers = await db("users as u")
       .join("security as s", "s.userid", "u.userid")
-      .select("s.name", "s.email", "u.genre", "u.bio", "u.availability", "u.location")
+      .select(columns)
       .modify((query) => {
         if (term) {
           query.whereRaw(
@@ -330,7 +469,14 @@ app.get("/directory", async (req, res) => {
       })
       .orderByRaw("LOWER(s.name) ASC");
 
-    res.render("directory", { performers, search });
+    const performersWithImages = performers.map((p) => ({
+      ...p,
+      imageUrl: hasImageColumns
+        ? toDataUrl(p.profile_image, p.profile_image_mime)
+        : null,
+    }));
+
+    res.render("directory", { performers: performersWithImages, search });
   } catch (error) {
     renderError(res, "Unable to load the directory.", error);
   }

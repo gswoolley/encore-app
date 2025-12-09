@@ -26,6 +26,24 @@
         border-radius: 1rem;
         box-shadow: 0 0.25rem 0.85rem rgba(0, 0, 0, 0.08);
       }
+      .profile-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #198754;
+        background: #e9f5ee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #198754;
+        font-size: 1.25rem;
+        text-align: center;
+        flex-shrink: 0;
+        line-height: 1.2;
+        padding: 6px;
+      }
       .badge-available {
         background-color: #d1e7dd;
         color: #0f5132;
@@ -70,9 +88,16 @@
       <% } %>
 
       <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
-        <div>
-          <h2 class="fw-bold text-success mb-1"><%= profile.name %></h2>
-          <p class="text-muted mb-0"><%= profile.email %></p>
+        <div class="d-flex align-items-center gap-3">
+          <% if (profile.imageUrl) { %>
+          <img src="<%= profile.imageUrl %>" alt="Profile" class="profile-avatar" />
+          <% } else { %>
+          <div class="profile-avatar">No photo</div>
+          <% } %>
+          <div>
+            <h2 class="fw-bold text-success mb-1"><%= profile.name %></h2>
+            <p class="text-muted mb-0"><%= profile.email %></p>
+          </div>
         </div>
         <div class="d-flex gap-2">
           <a class="btn btn-outline-success" href="/profile/edit">Edit profile</a>
