@@ -27,6 +27,24 @@
         box-shadow: 0 0.25rem 0.85rem rgba(0, 0, 0, 0.08);
         height: 100%;
       }
+      .directory-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #198754;
+        background: #e9f5ee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #198754;
+        font-size: 0.95rem;
+        text-align: center;
+        flex-shrink: 0;
+        line-height: 1.2;
+        padding: 4px;
+      }
       .badge-available {
         background-color: #d1e7dd;
         color: #0f5132;
@@ -98,9 +116,16 @@
         <div class="col-md-6 col-lg-4">
           <div class="card p-4">
             <div class="d-flex align-items-start justify-content-between mb-2">
-              <div>
-                <h5 class="fw-bold mb-1"><%= p.name %></h5>
-                <small class="text-muted"><%= p.email %></small>
+              <div class="d-flex align-items-center gap-3">
+                <% if (p.imageUrl) { %>
+                <img src="<%= p.imageUrl %>" alt="Profile" class="directory-avatar" />
+                <% } else { %>
+                <div class="directory-avatar">No photo</div>
+                <% } %>
+                <div>
+                  <h5 class="fw-bold mb-1"><%= p.name %></h5>
+                  <small class="text-muted"><%= p.email %></small>
+                </div>
               </div>
               <span
                 class="badge <%= p.availability === 'Y' ? 'badge-available' : 'badge-unavailable' %>"
