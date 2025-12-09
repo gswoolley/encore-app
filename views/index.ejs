@@ -3,139 +3,157 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Encore Dashboard</title>
+    <title>Encore | Performers Network</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
     <style>
       body {
-        background-color: #f8f9fa;
+        background: radial-gradient(circle at 10% 20%, #e6fff3 0, #f8f9fa 35%);
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: #1b1b1b;
       }
-      .navbar {
-        background-color: #198754;
-      }
-      .navbar-brand,
-      .nav-link {
-        color: #fff !important;
-        font-weight: 500;
-      }
-      .nav-link:hover {
-        text-decoration: underline;
-      }
-      .dashboard-header {
-        margin-top: 2rem;
-        text-align: center;
-      }
-      .dashboard-header h1 {
+      .navbar-brand {
         font-weight: 700;
-        color: #198754;
+        color: #198754 !important;
+        letter-spacing: 0.02em;
       }
-      .dashboard-cards {
-        margin-top: 2rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-        justify-content: center;
+      .hero {
+        padding: 4rem 1rem 3rem;
       }
-      .card {
+      .hero h1 {
+        font-weight: 800;
+        font-size: clamp(2rem, 4vw, 3rem);
+        color: #145c39;
+      }
+      .hero .lead {
+        color: #4a4a4a;
+        max-width: 650px;
+      }
+      .cta-buttons .btn {
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+      }
+      .feature-card {
         border: none;
         border-radius: 1rem;
-        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        height: 100%;
       }
-      .card:hover {
-        transform: translateY(-5px);
+      .feature-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
       }
-      .card-icon {
-        font-size: 2.5rem;
-        color: #198754;
+      .feature-icon {
+        font-size: 2.4rem;
       }
       footer {
-        text-align: center;
         color: #6c757d;
-        margin-top: 3rem;
-        padding-bottom: 1rem;
+        padding: 2rem 0;
       }
     </style>
   </head>
-
   <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg">
+    <nav class="navbar navbar-expand-lg bg-white border-bottom">
       <div class="container">
-        <a class="navbar-brand fw-bold" href="#">Encore</a>
+        <a class="navbar-brand" href="/">Encore</a>
         <button
           class="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
+          data-bs-target="#navContent"
         >
           <span class="navbar-toggler-icon"></span>
         </button>
-        <div
-          class="collapse navbar-collapse justify-content-end"
-          id="navbarNav"
-        >
-          <ul class="navbar-nav">
+        <div class="collapse navbar-collapse justify-content-end" id="navContent">
+          <ul class="navbar-nav align-items-lg-center">
+            <% if (currentUser) { %>
             <li class="nav-item">
-              <a class="nav-link" href="/profile">My Profile</a>
+              <a class="nav-link" href="/dashboard">Dashboard</a>
             </li>
+            <li class="nav-item ms-lg-2">
+              <a class="btn btn-success" href="/logout">Logout</a>
+            </li>
+            <% } else { %>
             <li class="nav-item">
-              <a class="nav-link" href="/directory">Directory</a>
+              <a class="nav-link" href="/login">Login</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/logout">Logout</a>
+            <li class="nav-item ms-lg-2">
+              <a class="btn btn-success" href="/register">Create account</a>
             </li>
+            <% } %>
           </ul>
         </div>
       </div>
     </nav>
 
-    <!-- Dashboard Header -->
-    <div class="dashboard-header container">
-      <h1>Welcome back to Encore!</h1>
-      <p class="text-muted">
-        Connecting you with your community through performance.
-      </p>
-    </div>
-
-    <!-- Dashboard Quick Cards -->
-    <div class="dashboard-cards container">
-      <div class="card p-4 text-center" style="width: 18rem">
-        <div class="card-icon mb-3">🎤</div>
-        <h5 class="card-title">My Profile</h5>
-        <p class="card-text">
-          View or edit your performer profile, update your bio, genre, and
-          availability.
-        </p>
-        <a href="/profile" class="btn btn-success">Go</a>
+    <header class="hero container text-center text-lg-start">
+      <div class="row align-items-center">
+        <div class="col-lg-7">
+          <h1>Showcase your talent and get booked faster.</h1>
+          <p class="lead mt-3">
+            Encore connects performers with organizers. Publish a profile,
+            share availability, and discover fellow talent in your city.
+          </p>
+          <div class="cta-buttons mt-4">
+            <% if (currentUser) { %>
+            <a class="btn btn-success me-2" href="/dashboard">Go to dashboard</a>
+            <% } else { %>
+            <a class="btn btn-success me-2" href="/register">Sign up</a>
+            <a class="btn btn-outline-success" href="/login">Log in</a>
+            <% } %>
+          </div>
+        </div>
+        <div class="col-lg-5 mt-4 mt-lg-0">
+          <div class="p-4 bg-white rounded-4 shadow-sm">
+            <h5 class="text-success fw-bold">Encore highlights</h5>
+            <ul class="list-unstyled mt-3 mb-0">
+              <li class="mb-2">• Build a performer profile with genre, bio, and location.</li>
+              <li class="mb-2">• Manage availability so organizers know when to book you.</li>
+              <li class="mb-2">• Browse the directory to collaborate with other performers.</li>
+              <li class="mb-0">• Stay authenticated with secure sessions and hashed passwords.</li>
+            </ul>
+          </div>
+        </div>
       </div>
+    </header>
 
-      <div class="card p-4 text-center" style="width: 18rem">
-        <div class="card-icon mb-3">🌟</div>
-        <h5 class="card-title">Browse Performers</h5>
-        <p class="card-text">
-          Discover other entertainers in your area or get inspired by their
-          profiles.
-        </p>
-        <a href="/directory" class="btn btn-success">Explore</a>
+    <section class="container my-5">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="feature-card card p-4 h-100">
+            <div class="feature-icon mb-3">🎤</div>
+            <h5 class="fw-bold">Profiles</h5>
+            <p class="text-muted">
+              Create or edit your performer profile with genre, bio, and location so organizers know your vibe.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card card p-4 h-100">
+            <div class="feature-icon mb-3">🔎</div>
+            <h5 class="fw-bold">Directory search</h5>
+            <p class="text-muted">
+              Filter by name, genre, or city to find collaborators and discover new acts in seconds.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card card p-4 h-100">
+            <div class="feature-icon mb-3">📅</div>
+            <h5 class="fw-bold">Availability</h5>
+            <p class="text-muted">
+              Keep your schedule up to date so booking managers can reach you when you’re ready to perform.
+            </p>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <div class="card p-4 text-center" style="width: 18rem">
-        <div class="card-icon mb-3">📅</div>
-        <h5 class="card-title">Availability</h5>
-        <p class="card-text">
-          Manage your schedule so organizers can know when you’re ready to
-          perform.
-        </p>
-        <a href="/availability" class="btn btn-success">Update</a>
-      </div>
-    </div>
-
-    <footer>
-      <p>© 2025 Encore | Entertainers Near You</p>
+    <footer class="text-center">
+      <p class="mb-0">© 2025 Encore. Built for performers.</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

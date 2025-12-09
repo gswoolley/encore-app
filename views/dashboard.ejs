@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Encore Dashboard</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background: #f8f9fa;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      .navbar {
+        background-color: #198754;
+      }
+      .navbar-brand,
+      .nav-link {
+        color: #fff !important;
+        font-weight: 600;
+      }
+      .hero {
+        padding: 2.5rem 0;
+      }
+      .card-link {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .badge-available {
+        background-color: #d1e7dd;
+        color: #0f5132;
+      }
+      .badge-unavailable {
+        background-color: #f8d7da;
+        color: #842029;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="/dashboard">Encore</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="/profile">Profile</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/directory">Directory</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/availability">Availability</a>
+            </li>
+            <li class="nav-item ms-lg-3">
+              <a class="btn btn-light text-success" href="/logout">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <section class="hero text-center text-lg-start">
+        <h1 class="fw-bold text-success">Welcome back, <%= user.name %>!</h1>
+        <p class="text-muted mb-0">
+          Manage your Encore profile, browse performers, and keep your availability current.
+        </p>
+      </section>
+
+      <% if (flashMessage) { %>
+      <div class="alert alert-success"><%= flashMessage %></div>
+      <% } %>
+
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title d-flex align-items-center">
+                🎤 <span class="ms-2">Profile</span>
+              </h5>
+              <p class="text-muted">
+                <% if (profile) { %>
+                Your profile is live. Keep it polished to attract bookings.
+                <% } else { %>
+                You don’t have a profile yet. Add your details to get discovered.
+                <% } %>
+              </p>
+              <div class="mt-auto">
+                <% if (profile) { %>
+                <a class="btn btn-success me-2" href="/profile">View</a>
+                <a class="btn btn-outline-success" href="/profile/edit">Edit</a>
+                <% } else { %>
+                <a class="btn btn-success" href="/profile/add">Create profile</a>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title d-flex align-items-center">
+                🔎 <span class="ms-2">Directory</span>
+              </h5>
+              <p class="text-muted">
+                Explore the Encore community. Filter by name, genre, or city to collaborate.
+              </p>
+              <div class="mt-auto">
+                <a class="btn btn-success" href="/directory">Open directory</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title d-flex align-items-center">
+                📅 <span class="ms-2">Availability</span>
+              </h5>
+              <p class="text-muted">
+                Set whether you’re currently available for gigs so organizers know when to reach out.
+              </p>
+              <div class="mt-auto">
+                <a class="btn btn-success" href="/availability">Update availability</a>
+                <% if (profile && profile.availability) { %>
+                <span
+                  class="badge <%= profile.availability === 'Y' ? 'badge-available' : 'badge-unavailable' %> ms-2"
+                >
+                  <%= profile.availability === 'Y' ? 'Open for bookings' : 'Unavailable' %>
+                </span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

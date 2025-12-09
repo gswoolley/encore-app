@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Directory | Encore</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background: #f8f9fa;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      .navbar {
+        background-color: #198754;
+      }
+      .navbar-brand,
+      .nav-link {
+        color: #fff !important;
+        font-weight: 600;
+      }
+      .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 0.25rem 0.85rem rgba(0, 0, 0, 0.08);
+        height: 100%;
+      }
+      .badge-available {
+        background-color: #d1e7dd;
+        color: #0f5132;
+      }
+      .badge-unavailable {
+        background-color: #f8d7da;
+        color: #842029;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="/dashboard">Encore</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="/profile">Profile</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/availability">Availability</a>
+            </li>
+            <li class="nav-item ms-lg-3">
+              <a class="btn btn-light text-success" href="/logout">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-4">
+      <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+        <div>
+          <h2 class="fw-bold text-success mb-1">Performer directory</h2>
+          <p class="text-muted mb-0">Search by name, genre, or city to find the right collaborator.</p>
+        </div>
+        <a class="btn btn-outline-success" href="/dashboard">Back to dashboard</a>
+      </div>
+
+      <form class="input-group mb-4" method="GET" action="/directory">
+        <input
+          type="text"
+          class="form-control"
+          name="search"
+          placeholder="Search by name, genre, or location"
+          value="<%= search || '' %>"
+        />
+        <button class="btn btn-success" type="submit">Search</button>
+      </form>
+
+      <div class="row g-4">
+        <% if (performers.length === 0) { %>
+        <div class="col-12">
+          <div class="alert alert-info mb-0">
+            No performers match that search yet. Try a different term.
+          </div>
+        </div>
+        <% } %>
+
+        <% performers.forEach((p) => { %>
+        <div class="col-md-6 col-lg-4">
+          <div class="card p-4">
+            <div class="d-flex align-items-start justify-content-between mb-2">
+              <div>
+                <h5 class="fw-bold mb-1"><%= p.name %></h5>
+                <small class="text-muted"><%= p.email %></small>
+              </div>
+              <span
+                class="badge <%= p.availability === 'Y' ? 'badge-available' : 'badge-unavailable' %>"
+              >
+                <%= p.availability === 'Y' ? 'Available' : 'Unavailable' %>
+              </span>
+            </div>
+            <p class="text-muted mb-2">
+              <span class="fw-semibold">Genre:</span> <%= p.genre || 'N/A' %>
+            </p>
+            <p class="text-muted mb-2">
+              <span class="fw-semibold">Location:</span> <%= p.location || 'N/A' %>
+            </p>
+            <p class="text-muted mb-3"><%= p.bio ? p.bio.substring(0, 140) : 'No bio provided.' %></p>
+            <a class="btn btn-outline-success btn-sm" href="mailto:<%= p.email %>">Email performer</a>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
