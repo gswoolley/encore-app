@@ -151,7 +151,7 @@ const toggleManager = async (req, res) => {
       req.session.user.is_manager = make_manager === "true";
     }
 
-    res.redirect("/manager/users");
+    res.redirect(`/performer/${userid}`);
   } catch (error) {
     renderError(res, "Unable to update manager status.", error);
   }
