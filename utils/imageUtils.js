@@ -36,7 +36,20 @@ const getDefaultAvatarPath = (seed) => {
 
 // Build a web URL for a profile image given a stored path or fallback default
 const buildProfileImageUrl = ({ profileImagePath, seed }) => {
-  const relativePath = profileImagePath || getDefaultAvatarPath(seed);
+  let relativePath = profileImagePath || getDefaultAvatarPath(seed);
+
+  // Normalize any stored paths so we don't end up with /uploads//uploads/...
+  if (relativePath.startsWith("/uploads/")) {
+    relativePath = relativePath.slice("/uploads/".length);
+  } else if (relativePath.startsWith("uploads/")) {
+    relativePath = relativePath.slice("uploads/".length);
+  }
+
+  // Trim any leading slash so we can safely prefix /uploads/
+  if (relativePath.startsWith("/")) {
+    relativePath = relativePath.slice(1);
+  }
+
   return `/uploads/${relativePath}`;
 };
 

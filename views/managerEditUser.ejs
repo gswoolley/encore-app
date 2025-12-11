@@ -22,7 +22,7 @@
             <div class="alert alert-danger py-2"><%= error_message %></div>
             <% } %>
 
-            <form action="/manager/user/<%= user.userid %>/edit" method="POST">
+            <form action="/manager/user/<%= user.userid %>/edit" method="POST" enctype="multipart/form-data">
               <div class="row g-3">
                 <div class="col-md-6">
                   <label class="form-label" for="is_performer">Performer</label>
@@ -79,6 +79,72 @@
                     rows="4"
                   ><%= user.bio || '' %></textarea>
                 </div>
+                <div class="col-12 mt-2">
+                  <label class="form-label" for="profileImage">Profile image</label>
+                  <% if (user.imageUrl) { %>
+                  <div class="mb-2">
+                    <img
+                      src="<%= user.imageUrl %>"
+                      alt="Profile"
+                      class="rounded"
+                      style="max-height: 150px;"
+                    />
+                  </div>
+                  <% } %>
+                  <input
+                    class="form-control"
+                    type="file"
+                    id="profileImage"
+                    name="profileImage"
+                    accept="image/*"
+                  />
+                  <div class="form-text">Max 5MB. Upload a new image to replace the current one.</div>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm mt-3"
+                    id="toggleAvatarGalleryManager"
+                  >
+                    Choose from default avatars
+                  </button>
+                  <div class="mt-3" id="avatarGalleryManager" style="display: none;">
+                    <label class="form-label d-block">Default avatars</label>
+                    <div class="row g-2">
+                      <% const defaultFiles = [
+                        "Untitled design (48).png",
+                        "Untitled design (49).png",
+                        "Untitled design (50).png",
+                        "Untitled design (51).png",
+                        "Untitled design (52).png",
+                        "Untitled design (53).png",
+                        "Untitled design (54).png",
+                        "Untitled design (55).png",
+                        "Untitled design (56).png",
+                        "Untitled design (57).png",
+                        "Untitled design (58).png",
+                      ]; %>
+                      <% defaultFiles.forEach(function(file, idx) { %>
+                      <div class="col-4 col-md-3">
+                        <div class="form-check">
+                          <input
+                            class="form-check-input"
+                            type="radio"
+                            name="default_avatar"
+                            id="defaultAvatarManager<%= idx %>"
+                            value="<%= file %>"
+                          />
+                          <label class="form-check-label d-block" for="defaultAvatarManager<%= idx %>">
+                            <img
+                              src="/uploads/default-avatars/<%= file %>"
+                              alt="Avatar option"
+                              class="img-fluid rounded"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                      <% }); %>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="d-flex gap-2 mt-4">
                 <button class="btn btn-success" type="submit">Save changes</button>
@@ -127,8 +193,34 @@
             </div>
             <% } %>
           </div>
+          <div class="card card-elevated p-4 mt-4">
+            <h5 class="fw-bold mb-3 text-danger">Danger zone</h5>
+            <p class="text-muted mb-3">Deleting this user will remove their account, profile, and media.</p>
+            <form
+              action="/manager/user/<%= user.userid %>/delete"
+              method="POST"
+              onsubmit="return confirm('Delete this user and all of their data?');"
+            >
+              <button type="submit" class="btn btn-outline-danger">Delete user</button>
+            </form>
+          </div>
         </div>
       </div>
     </main>
+
+    <script>
+      (function () {
+        const toggleGalleryBtn = document.getElementById("toggleAvatarGalleryManager");
+        const avatarGallery = document.getElementById("avatarGalleryManager");
+
+        if (toggleGalleryBtn && avatarGallery) {
+          toggleGalleryBtn.addEventListener("click", () => {
+            const isHidden =
+              avatarGallery.style.display === "none" || avatarGallery.style.display === "";
+            avatarGallery.style.display = isHidden ? "block" : "none";
+          });
+        }
+      })();
+    </script>
 
 <%- include('partials/footer') %>

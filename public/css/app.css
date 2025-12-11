@@ -74,10 +74,30 @@ body {
   color: #842029;
 }
 
+/* Directory badges stack in a right-hand column pinned to the card corner */
+.directory-card {
+  position: relative;
+}
+
+.directory-badge-column {
+  position: absolute;
+  top: 0.75rem;   /* matches p-4 padding */
+  right: 0.75rem;
+}
+
+.directory-card-header {
+  padding-right: 5.5rem; /* reserve space under badge column for long names */
+}
+
 .page-hero {
   padding: 2.5rem 0 1.5rem;
 }
 
 .flash-container {
   margin-bottom: 1rem;
+}
+
+/* Keep the two purpose-choice cards the same height */
+.purpose-card-body {
+  min-height: 220px;
 }
