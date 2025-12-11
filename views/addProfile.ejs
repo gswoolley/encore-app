@@ -1,8 +1,10 @@
 <%- include('partials/header', { title: 'Create Profile | Encore', activePage: 'profile' }) %>
 
+    <!-- Page for creating a new performer profile with details and avatar -->
     <main class="container py-4">
       <div class="row justify-content-center">
         <div class="col-lg-8">
+          <!-- Card containing the main create-profile form -->
           <div class="card card-elevated p-4">
             <h3 class="fw-bold text-success mb-3">Create your performer profile</h3>
             <p class="text-muted">Tell organizers who you are and how to book you.</p>
@@ -11,6 +13,7 @@
             <div class="alert alert-danger py-2"><%= error_message %></div>
             <% } %>
 
+            <!-- Form to collect performer details, availability, and profile image -->
             <form
               action="/profile/add"
               method="POST"

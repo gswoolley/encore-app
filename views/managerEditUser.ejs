@@ -1,5 +1,6 @@
 <%- include('partials/header', { title: 'Edit User | Encore', activePage: 'directory' }) %>
 
+    <!-- Manager page for editing a user's profile details and media -->
     <main class="container py-4">
       <div class="row justify-content-center mb-3">
         <div class="col-lg-8 d-flex justify-content-between align-items-center">
@@ -13,6 +14,7 @@
 
       <div class="row justify-content-center">
         <div class="col-lg-8">
+          <!-- Card for editing the selected user's profile fields -->
           <div class="card card-elevated p-4 mb-4">
             <h5 class="fw-bold mb-3">Profile details</h5>
 
@@ -84,6 +86,7 @@
               </div>
             </form>
           </div>
+          <!-- Card listing this user's media with delete controls -->
           <div class="card card-elevated p-4">
             <h5 class="fw-bold mb-3">Media uploads</h5>
             <% if (!media || media.length === 0) { %>
