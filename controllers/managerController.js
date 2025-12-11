@@ -1,6 +1,6 @@
 // managerController.js: Manager-only actions for editing users, roles, and media
 
-const db = require("../db");
+const db = require("../utils/db");
 const path = require("path");
 const fs = require("fs");
 const { renderError } = require("../utils/errorHandler");

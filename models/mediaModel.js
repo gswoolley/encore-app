@@ -1,6 +1,6 @@
 // mediaModel.js: Data access helpers for uploaded user media records
 
-const db = require("../db");
+const db = require("../utils/db");
 
 // Get all media for a user (newest first)
 const getMediaByUserId = (userid) => {

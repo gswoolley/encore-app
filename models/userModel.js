@@ -1,6 +1,6 @@
 // userModel.js: Data access helpers for user profile, directory, and availability tables
 
-const db = require("../db");
+const db = require("../utils/db");
 
 // Fetch a subset of profile fields for the logged-in user
 const getProfileSummaryByUserId = async (userId, columns) => {
