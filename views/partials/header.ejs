@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Global head: meta + CSS includes -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title || 'Encore' %></title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/app.css" />
+  </head>
+  <body>
+    <!-- Shared main navbar -->
+    <nav class="navbar navbar-expand-lg main-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="<%= currentUser ? '/dashboard' : '/' %>">Encore</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <% if (currentUser) { %>
+          <!-- Logged-in nav: find performers + profile thumb + logout -->
+          <ul class="navbar-nav ms-auto align-items-lg-center">
+            <li class="nav-item me-3">
+              <a class="nav-link <%= activePage === 'directory' ? 'active' : '' %>" href="/directory">
+                Find performers
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link d-flex align-items-center"
+                href="/profile"
+                id="profileMenuLink"
+              >
+                <span
+                  class="rounded-circle bg-light text-success d-inline-flex justify-content-center align-items-center me-2"
+                  style="width: 32px; height: 32px; font-size: 0.9rem;"
+                >
+                  <%= currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?' %>
+                </span>
+                <span class="d-none d-sm-inline"><%= currentUser.name || 'Profile' %></span>
+              </a>
+            </li>
+            <li class="nav-item ms-lg-2">
+              <a class="btn btn-light text-success" href="/logout">Logout</a>
+            </li>
+          </ul>
+          <% } else { %>
+          <!-- Logged-out nav: login + sign up -->
+          <ul class="navbar-nav ms-auto align-items-lg-center">
+            <li class="nav-item">
+              <a class="nav-link <%= activePage === 'login' ? 'active' : '' %>" href="/login">Login</a>
+            </li>
+            <li class="nav-item ms-lg-2">
+              <a class="btn btn-light text-success" href="/register">Sign up</a>
+            </li>
+          </ul>
+          <% } %>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-3 flash-container">
+      <% if (flashMessage) { %>
+      <div class="alert alert-success mb-0"><%= flashMessage %></div>
+      <% } %>
+    </div>

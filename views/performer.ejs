@@ -1,0 +1,128 @@
+<%- include('partials/header', { title: performer.name + ' | Encore', activePage: 'directory' }) %>
+
+    <main class="container py-4">
+      <!-- Performer header: avatar, name, manager actions -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center gap-3">
+          <% if (performer.imageUrl) { %>
+          <img src="<%= performer.imageUrl %>" alt="Profile" class="avatar-lg" />
+          <% } else { %>
+          <div class="avatar-lg d-flex align-items-center justify-content-center fw-bold text-success">
+            No photo
+          </div>
+          <% } %>
+          <div>
+            <h2 class="fw-bold text-success mb-1"><%= performer.name %></h2>
+            <p class="text-muted mb-0"><%= performer.email %></p>
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <a class="btn btn-outline-success" href="/directory">Back to directory</a>
+          <% if (currentUser && currentUser.is_manager) { %>
+          <a
+            class="btn btn-outline-secondary"
+            href="/manager/user/<%= performer.userid %>/edit"
+          >
+            Edit user
+          </a>
+          <form
+            action="/manager/user/<%= performer.userid %>/toggle-manager"
+            method="POST"
+            class="d-inline"
+          >
+            <input
+              type="hidden"
+              name="make_manager"
+              value="<%= performer.is_manager ? 'false' : 'true' %>"
+            />
+            <button
+              type="submit"
+              class="btn btn-outline-<%= performer.is_manager ? 'danger' : 'primary' %>"
+            >
+              <%= performer.is_manager ? 'Remove manager' : 'Make manager' %>
+            </button>
+          </form>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- About + contact columns -->
+      <div class="row g-4">
+        <div class="col-md-8">
+          <div class="card card-elevated p-4 h-100">
+            <h5 class="fw-bold mb-3">About</h5>
+            <p class="text-muted mb-4"><%= performer.bio || 'No bio added yet.' %></p>
+            <div class="row">
+              <div class="col-sm-6 mb-3">
+                <small class="text-uppercase text-muted d-block">Act type</small>
+                <span class="fw-semibold"><%= performer.act_category || 'Not set' %></span>
+              </div>
+              <% if (performer.genre) { %>
+              <div class="col-sm-6 mb-3">
+                <small class="text-uppercase text-muted d-block">Details / genre</small>
+                <span class="fw-semibold"><%= performer.genre %></span>
+              </div>
+              <% } %>
+              <div class="col-sm-6 mb-3">
+                <small class="text-uppercase text-muted d-block">Location</small>
+                <span class="fw-semibold"><%= performer.location || 'Not set' %></span>
+              </div>
+              <div class="col-sm-6">
+                <small class="text-uppercase text-muted d-block">Availability</small>
+                <span
+                  class="badge <%= performer.availability === 'Y' ? 'badge-available' : 'badge-unavailable' %>"
+                >
+                  <%= performer.availability === 'Y' ? 'Open for bookings' : 'Unavailable' %>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card p-4 h-100">
+            <h6 class="fw-bold mb-3">Contact</h6>
+            <p class="text-muted mb-3">Reach out directly to discuss your event.</p>
+            <a class="btn btn-success w-100" href="mailto:<%= performer.email %>">Email performer</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Public media gallery for this performer -->
+      <div class="row g-4 mt-3">
+        <div class="col-12">
+          <div class="card card-elevated p-4">
+            <h5 class="fw-bold mb-3">Past events</h5>
+            <% if (!media || media.length === 0) { %>
+            <p class="text-muted mb-0">This performer hasn’t added any media yet.</p>
+            <% } else { %>
+            <div class="row g-3">
+              <% media.forEach(function(item) { %>
+              <div class="col-md-4 col-sm-6">
+                <div class="border rounded p-2 h-100">
+                  <% if (item.media_type === 'image') { %>
+                  <img
+                    src="/uploads/<%= item.media_path %>"
+                    alt="Event photo"
+                    class="img-fluid rounded mb-2"
+                  />
+                  <% } else { %>
+                  <div class="ratio ratio-16x9 mb-2">
+                    <iframe
+                      src="/uploads/<%= item.media_path %>"
+                      title="Event video"
+                      frameborder="0"
+                      allowfullscreen
+                    ></iframe>
+                  </div>
+                  <% } %>
+                </div>
+              </div>
+              <% }); %>
+            </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </main>
+
+<%- include('partials/footer') %>

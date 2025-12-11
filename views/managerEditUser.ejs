@@ -1,0 +1,131 @@
+<%- include('partials/header', { title: 'Edit User | Encore', activePage: 'directory' }) %>
+
+    <main class="container py-4">
+      <div class="row justify-content-center mb-3">
+        <div class="col-lg-8 d-flex justify-content-between align-items-center">
+          <div>
+            <h3 class="fw-bold text-success mb-0">Edit user</h3>
+            <p class="text-muted mb-0"><%= user.name %> &lt;<%= user.email %>&gt;</p>
+          </div>
+          <a class="btn btn-outline-success btn-sm" href="/performer/<%= user.userid %>">Back to performer</a>
+        </div>
+      </div>
+
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="card card-elevated p-4 mb-4">
+            <h5 class="fw-bold mb-3">Profile details</h5>
+
+            <% if (error_message && error_message !== "") { %>
+            <div class="alert alert-danger py-2"><%= error_message %></div>
+            <% } %>
+
+            <form action="/manager/user/<%= user.userid %>/edit" method="POST">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="is_performer">Performer</label>
+                  <select class="form-select" id="is_performer" name="is_performer">
+                    <option value="Y" <%= user.is_performer ? 'selected' : '' %>>Yes</option>
+                    <option value="N" <%= !user.is_performer ? 'selected' : '' %>>No</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="act_category">Act type / category</label>
+                  <select class="form-select" id="act_category" name="act_category">
+                    <option value="">Select an act type</option>
+                    <option value="music" <%= user.act_category === 'music' ? 'selected' : '' %>>Music</option>
+                    <option value="dj" <%= user.act_category === 'dj' ? 'selected' : '' %>>DJ</option>
+                    <option value="comedy" <%= user.act_category === 'comedy' ? 'selected' : '' %>>Comedy</option>
+                    <option value="magic" <%= user.act_category === 'magic' ? 'selected' : '' %>>Magic</option>
+                    <option value="variety" <%= user.act_category === 'variety' ? 'selected' : '' %>>Variety / Circus</option>
+                    <option value="other" <%= user.act_category === 'other' ? 'selected' : '' %>>Other</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="location">Location</label>
+                  <input
+                    class="form-control"
+                    type="text"
+                    id="location"
+                    name="location"
+                    value="<%= user.location || '' %>"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="availability">Availability</label>
+                  <select class="form-select" id="availability" name="availability">
+                    <option value="Y" <%= user.availability === 'Y' ? 'selected' : '' %>>Open for bookings</option>
+                    <option value="N" <%= user.availability !== 'Y' ? 'selected' : '' %>>Unavailable</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="genre">Details / style (optional)</label>
+                  <input
+                    class="form-control"
+                    type="text"
+                    id="genre"
+                    name="genre"
+                    value="<%= user.genre || '' %>"
+                  />
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="bio">Bio</label>
+                  <textarea
+                    class="form-control"
+                    id="bio"
+                    name="bio"
+                    rows="4"
+                  ><%= user.bio || '' %></textarea>
+                </div>
+              </div>
+              <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-success" type="submit">Save changes</button>
+                <a class="btn btn-outline-secondary" href="/manager/users">Cancel</a>
+              </div>
+            </form>
+          </div>
+          <div class="card card-elevated p-4">
+            <h5 class="fw-bold mb-3">Media uploads</h5>
+            <% if (!media || media.length === 0) { %>
+            <p class="text-muted mb-0">This user has not uploaded any media.</p>
+            <% } else { %>
+            <div class="row g-3">
+              <% media.forEach(function(item) { %>
+              <div class="col-md-4 col-sm-6">
+                <div class="border rounded p-2 h-100">
+                  <% if (item.media_type === 'image') { %>
+                  <img
+                    src="/uploads/<%= item.media_path %>"
+                    alt="Event photo"
+                    class="img-fluid rounded mb-2"
+                  />
+                  <% } else { %>
+                  <div class="ratio ratio-16x9 mb-2">
+                    <iframe
+                      src="/uploads/<%= item.media_path %>"
+                      title="Event video"
+                      frameborder="0"
+                      allowfullscreen
+                    ></iframe>
+                  </div>
+                  <% } %>
+                  <form
+                    action="/manager/user/<%= user.userid %>/media/<%= item.id %>/delete"
+                    method="POST"
+                    onsubmit="return confirm('Delete this media item?');"
+                  >
+                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <% }); %>
+            </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </main>
+
+<%- include('partials/footer') %>

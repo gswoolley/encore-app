@@ -1,0 +1,83 @@
+body {
+  background: #f8f9fa;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #212529;
+}
+
+.main-navbar {
+  background-color: #198754;
+}
+
+.main-navbar .navbar-brand,
+.main-navbar .nav-link {
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* Make Encore logo text slightly larger than other nav links */
+.main-navbar .navbar-brand {
+  font-size: 2.2rem;
+}
+
+.main-navbar .nav-link:hover,
+.main-navbar .nav-link:focus {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+.main-navbar .nav-link.active {
+  text-decoration: underline;
+}
+
+.btn-success {
+  background-color: #198754;
+  border-color: #198754;
+}
+
+.btn-success:hover {
+  background-color: #157347;
+  border-color: #146c43;
+}
+
+.card-elevated {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 0.25rem 0.85rem rgba(0, 0, 0, 0.08);
+}
+
+.avatar-lg {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #198754;
+  background: #e9f5ee;
+}
+
+.avatar-sm {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #198754;
+  background: #e9f5ee;
+}
+
+.badge-available {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.badge-unavailable {
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+.page-hero {
+  padding: 2.5rem 0 1.5rem;
+}
+
+.flash-container {
+  margin-bottom: 1rem;
+}

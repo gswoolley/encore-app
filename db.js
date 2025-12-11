@@ -1,6 +1,7 @@
 require("dotenv").config();
 const knex = require("knex");
 
+// Shared Knex instance for talking to the Postgres database
 const db = knex({
   client: "pg",
   connection: {
