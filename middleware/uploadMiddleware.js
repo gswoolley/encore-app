@@ -1,3 +1,5 @@
+// uploadMiddleware.js: Configures Multer storage and helpers for profile and media uploads
+
 const multer = require("multer");
 const path = require("path");
 

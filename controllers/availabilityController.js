@@ -1,3 +1,5 @@
+// availabilityController.js: Lets performers view and update their booking availability
+
 const { renderError } = require("../utils/errorHandler");
 const userModel = require("../models/userModel");
 

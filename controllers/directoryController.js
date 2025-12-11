@@ -1,3 +1,5 @@
+// directoryController.js: Handles public performer directory and performer detail pages
+
 const { buildProfileImageUrl } = require("../utils/imageUtils");
 const { renderError } = require("../utils/errorHandler");
 const userModel = require("../models/userModel");

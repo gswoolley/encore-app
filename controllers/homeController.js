@@ -1,3 +1,5 @@
+// homeController.js: Handles root redirect, FAQ, purpose selection, and generic success page
+
 // Redirect root to login screen
 const root = (req, res) => {
   res.redirect("/login");

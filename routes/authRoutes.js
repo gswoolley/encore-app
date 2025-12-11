@@ -1,3 +1,5 @@
+// authRoutes.js: Route definitions for registration, login, and logout endpoints
+
 const express = require("express");
 const router = express.Router();
 

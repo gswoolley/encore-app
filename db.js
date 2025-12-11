@@ -1,3 +1,5 @@
+// db.js: Shared Knex/Postgres database connection used across models and controllers
+
 require("dotenv").config();
 const knex = require("knex");
 

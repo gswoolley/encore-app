@@ -1,3 +1,5 @@
+// mainRoutes.js: Core site routes for home, FAQ, directory, and availability
+
 const express = require("express");
 const router = express.Router();
 

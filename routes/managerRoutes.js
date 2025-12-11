@@ -1,3 +1,5 @@
+// managerRoutes.js: Manager-only routes for editing users, manager status, and media
+
 const express = require("express");
 const router = express.Router();
 

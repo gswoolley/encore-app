@@ -1,3 +1,5 @@
+// authController.js: Handles user registration, login, and logout flows
+
 const bcrypt = require("bcryptjs");
 const { renderError } = require("../utils/errorHandler");
 const securityModel = require("../models/securityModel");

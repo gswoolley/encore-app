@@ -1,3 +1,5 @@
+// index.js: Main Express app entry point and HTTP server setup for Encore
+
 // Load environment variables (DB, session secret, etc.)
 require("dotenv").config();
 

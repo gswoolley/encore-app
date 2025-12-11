@@ -1,3 +1,5 @@
+// authMiddleware.js: Guards routes so only public paths bypass login checks
+
 // Paths that do not require authentication
 const publicPaths = ["/", "/login", "/register"];
 

@@ -1,3 +1,5 @@
+// errorHandler.js: Central helper to log errors and render the error view consistently
+
 // Helper to render errors and log server issues
 const renderError = (res, message, error = null, status = 500) => {
   if (error) {

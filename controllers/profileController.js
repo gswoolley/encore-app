@@ -1,3 +1,5 @@
+// profileController.js: Manages logged-in user's dashboard, profile, and media gallery
+
 const { buildProfileImageUrl, getDefaultAvatarPath } = require("../utils/imageUtils");
 const { renderError } = require("../utils/errorHandler");
 const userModel = require("../models/userModel");

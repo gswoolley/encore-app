@@ -1,3 +1,5 @@
+// imageUtils.js: Utility functions for choosing default avatars and building profile image URLs
+
 const DEFAULT_AVATAR_COUNT = 11;
 
 // Filenames present under uploads/default-avatars

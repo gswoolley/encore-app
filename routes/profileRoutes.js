@@ -1,3 +1,5 @@
+// profileRoutes.js: Routes for the logged-in user's dashboard, profile, and media gallery
+
 const express = require("express");
 const router = express.Router();
 

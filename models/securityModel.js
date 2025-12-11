@@ -1,3 +1,5 @@
+// securityModel.js: Data access for login/registration security table (users + passwords)
+
 const db = require("../db");
 
 // Look up a security row by email (case-insensitive)
